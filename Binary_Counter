@@ -1,0 +1,74 @@
+/*
+Eric McAfee - Binary Counter
+*/
+
+int latchPin = 5;
+int clockPin = 6;
+int dataPin = 4;
+
+byte output = 0;
+
+void setup() 
+{
+  pinMode(latchPin, OUTPUT);
+  pinMode(dataPin, OUTPUT);  
+  pinMode(clockPin, OUTPUT);
+  updateShiftRegister();
+}
+
+void loop()
+{
+  for (int i = 0; i < 256; i++)
+  {
+    int value = i;
+    char toBinary[9] = {};
+    itoa(value, toBinary, 2);
+    int binaryOffset = getOffset(toBinary);
+    char binaryAligned[9] = {};
+    getAlignedArray(toBinary, binaryAligned, binaryOffset);
+    output = 0;
+    convertArrayToByte(binaryAligned);
+    updateShiftRegister();
+    delay(1000);
+  } 
+}
+
+void convertArrayToByte(char array[])
+{
+  for (int i = 0; i < 8; i++)
+  {
+    if (array[i] == '1')
+    {
+      bitSet(output, i);
+    }
+  }
+}
+
+int getOffset(char unalignedArray[])
+{
+    int offset = 0;
+    for (int i = 0; i < 9; i++)
+    {
+        if (unalignedArray[i] == '\0')
+        {
+            offset = 8 - i;
+            break;
+        }
+    }
+    return offset;
+}
+
+void getAlignedArray(char unalignedArray[], char alignedArray[], int offset)
+{
+    for (int i = offset; i < 8; i++)
+    {
+        alignedArray[i] = unalignedArray[i - offset];
+    }
+}
+
+void updateShiftRegister()
+{
+   digitalWrite(latchPin, LOW);
+   shiftOut(dataPin, clockPin, LSBFIRST, output);
+   digitalWrite(latchPin, HIGH);
+}
